@@ -12,83 +12,77 @@ const { UserProfile, validate } = require("../models/userProfile");
 // });
 
 router.get("/getUserById/:id", async (req, res) => {
-  console.log(req.params);
-  const re = /[0-9A-Fa-f]{24}/g;
-  if (re.test(req.params.id)) {
+    console.log(req.params);
     const user = await UserProfile.findOne({ _id: req.params.id });
     if (!user) {
-      return res.status(404).send("user not found.");
+        return res.status(404).send("user not found.");
     }
     res.send(user);
-  } else {
-    return res.status(400).send("Id invalid");
-  }
 });
 
 router.get("/checkExistByEmail/:userEmail", async (req, res) => {
-  console.log(req.params.userEmail);
+    console.log(req.params.userEmail);
 
-  const user = await UserProfile.findOne({
-    userEmail: req.params.userEmail.toLowerCase(),
-  });
+    const user = await UserProfile.findOne({ userEmail: req.params.userEmail.toLowerCase() });
 
-  return user ? res.send(true) : res.send(false);
+    return user ? res.send(true) : res.send(false);
 
-  // if (!user) {
-  //     return res.status(404).send(JSON.stringify("Email is OK to use."));
-  // }
-  // return res.send(JSON.stringify("Email has been registered."));
+    // if (!user) {
+    //     return res.status(404).send(JSON.stringify("Email is OK to use."));
+    // }
+    // return res.send(JSON.stringify("Email has been registered."));
 });
 
 router.get("/checkExistByUsername/:username", async (req, res) => {
-  const user = await UserProfile.findOne({
-    userName: req.params.username,
-  });
 
-  return user ? res.send(true) : res.send(false);
+    const user = await UserProfile.findOne({ userName: req.params.username});
 
-  // if (!user) {
-  //     return res.status(404).send(JSON.stringify("username is OK to use"));
-  // }
-  // return res.send(JSON.stringify("username has been used"));
+    return user ? res.send(true) : res.send(false);
+
+    // if (!user) {
+    //     return res.status(404).send(JSON.stringify("username is OK to use"));
+    // }
+    // return res.send(JSON.stringify("username has been used"));
+
 });
 
 router.post("/createNewAccount", async (req, res) => {
-  const { error } = validate(req.body);
-  if (error) {
-    console.log(error);
-    return res.status(400).send(error.details[0].message);
-  }
 
-  const userCheck = await UserProfile.findOne({
-    userEmail: req.body.userEmail.toLowerCase(),
-  });
-  if (userCheck) {
-    return res.status(400).send("User already registered.");
-  }
+    const { error } = validate(req.body);
+    if (error) {
+        console.log(error);
+        return res.status(400).send(error.details[0].message);
+    }
 
-  const user = new UserProfile({
-    name: req.body.name,
-    userName: req.body.userName,
-    userEmail: req.body.userEmail.toLowerCase(),
-    password: req.body.password,
+    const userCheck = await UserProfile.findOne({
+        userEmail: req.body.userEmail.toLowerCase(),
+    });
+    if (userCheck) {
+        return res.status(400).send("User already registered.");
+    }
 
-    userRole: "user",
-    age: req.body.age,
-    gender: req.body.gender,
-    phone: req.body.phone,
-  });
-  // Encrypting password;
-  const salt = await bcrypt.genSalt(10);
-  user.password = await bcrypt.hash(user.password, salt);
-  // Save to database;
-  await user.save();
-  // Generate token;
-  const token = UserProfile.generateAuthToken.call(user);
+    const user = new UserProfile({
+        name: req.body.name,
+        userName: req.body.userName,
+        userEmail: req.body.userEmail.toLowerCase(),
+        password: req.body.password,
 
-  res
-    .header("bearerToken", token)
-    .send(_.pick(user, ["userEmail", "password", "userRole", "phone"]));
+        userRole: 'user',
+        age: req.body.age,
+        gender: req.body.gender,
+        phone: req.body.phone,
+    });
+    // Encrypting password;
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
+    // Save to database;
+    await user.save();
+    // Generate token;
+    const token = UserProfile.generateAuthToken.call(user);
+
+    res.header("bearerToken", token).send(
+        _.pick(user, ["userEmail", "password", "userRole", "phone"])
+    );
 });
 
 // router.put("/:id", async (req, res) => {
@@ -122,6 +116,7 @@ router.post("/createNewAccount", async (req, res) => {
 // });
 
 module.exports = router;
+
 
 // interface User {
 //     ...
